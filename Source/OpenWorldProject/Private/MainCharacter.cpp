@@ -4,6 +4,7 @@
 #include "MainCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
@@ -14,9 +15,22 @@ AMainCharacter::AMainCharacter()
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
+	Camera->bUsePawnControlRotation = false;
+
+	// Don't rotate when the controller rotates. Let that just affect the camera.
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+	
+	// Configure character movement
+	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
+	GetCharacterMovement()->JumpZVelocity = 600.f;
+	GetCharacterMovement()->AirControl = 0.2f;
 }
 
 // Called when the game starts or when spawned
@@ -44,20 +58,44 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AMainCharacter::MoveForward(const float Value)
 {
-	AddMovementInput(GetActorForwardVector() * Value);
+	// AddMovementInput(GetActorForwardVector() * Value);
+
+	if ((Controller != nullptr) && (Value != 0.0f))
+	{
+		// find out which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		// get forward vector
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(Direction, Value);
+	}
 }
 
 void AMainCharacter::MoveRight(const float Value)
 {
-	AddMovementInput(GetActorRightVector()*Value);
+	// AddMovementInput(GetActorRightVector() * Value);
+
+	// Controllers are non - physical actors that can possess a Pawn to control its actions.
+	if ((Controller != nullptr) && (Value != 0.0f))
+	{
+		// To find which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.0f, Rotation.Yaw, 0.0f);
+
+		// To get the world direction
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		AddMovementInput(Direction, Value);
+	}
 }
 
 void AMainCharacter::LookUp(const float Value)
 {
-	AddControllerPitchInput(Value * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(Value * TurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AMainCharacter::LookRight(const float Value)
 {
-	AddControllerYawInput(Value * GetWorld()->GetDeltaSeconds());
+	AddControllerYawInput(Value * TurnRate * GetWorld()->GetDeltaSeconds());
 }

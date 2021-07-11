@@ -20,6 +20,9 @@ class OPENWORLDPROJECT_API AMainCharacter : public ACharacter
 	UPROPERTY(EditDefaultsOnly, Category="Components")
 	UCameraComponent* Camera;
 
+	UPROPERTY(EditAnywhere, Category="Properties")
+	float TurnRate = 60;
+
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void LookUp(float Value);
