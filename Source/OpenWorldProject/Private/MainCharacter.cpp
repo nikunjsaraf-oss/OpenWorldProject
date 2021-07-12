@@ -63,6 +63,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMainCharacter::StartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMainCharacter::EndSprint);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 }
 
 void AMainCharacter::MoveForward(const float Value)

@@ -47,7 +47,7 @@ class OPENWORLDPROJECT_API AMainCharacter : public ACharacter
 	void LookRight(float Value);
 	void StartSprint();
 	void EndSprint();
-	void RegenerateStamina();
+	void RegenerateStamina(); 
 
 
 public:
