@@ -25,18 +25,24 @@ AMainCharacter::AMainCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
-	
+
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
+
+	DefaultWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	Stamina = MaxStamina;
+	StaminaDrainRate = 0.1f;
 }
 
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetWorldTimerManager().SetTimer(TimerHandle_StaminaRegeneration, this, &AMainCharacter::RegenerateStamina, 1, true);
 }
 
 // Called every frame
@@ -54,6 +60,9 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMainCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("LookUp", this, &AMainCharacter::LookUp);
 	PlayerInputComponent->BindAxis("LookRight", this, &AMainCharacter::LookRight);
+
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMainCharacter::StartSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMainCharacter::EndSprint);
 }
 
 void AMainCharacter::MoveForward(const float Value)
@@ -98,4 +107,42 @@ void AMainCharacter::LookUp(const float Value)
 void AMainCharacter::LookRight(const float Value)
 {
 	AddControllerYawInput(Value * TurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AMainCharacter::StartSprint()
+{
+	if (Stamina > 0)
+	{
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = 1200;
+		Stamina -= 0.1f;
+
+		GetWorldTimerManager().SetTimer(TimerHandle_StaminaCheck, this, &AMainCharacter::StartSprint, 1, true);
+
+		if (Stamina <= 0.00f)
+		{
+			bIsSprinting = false;
+			GetCharacterMovement()->MaxWalkSpeed = 600;
+		}
+	}
+}
+
+void AMainCharacter::EndSprint()
+{
+	bIsSprinting = false;
+	GetCharacterMovement()->MaxWalkSpeed = 600;
+	GetWorldTimerManager().ClearTimer(TimerHandle_StaminaCheck);
+}
+
+void AMainCharacter::RegenerateStamina()
+{
+	if(Stamina < 1 && !bIsSprinting)
+	{
+		Stamina += 0.05f;
+
+		if(Stamina > MaxStamina)
+		{
+			Stamina = MaxStamina;
+		}
+	}
 }
