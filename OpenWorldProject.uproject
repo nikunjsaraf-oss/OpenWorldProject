@@ -16,7 +16,7 @@
 	"Plugins": [
 		{
 			"Name": "PowerIK",
-			"Enabled": true,
+			"Enabled": false,
 			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/power-ik"
 		},
 		{
