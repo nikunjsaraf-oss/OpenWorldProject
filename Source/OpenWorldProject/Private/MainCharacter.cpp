@@ -111,18 +111,18 @@ void AMainCharacter::LookRight(const float Value)
 
 void AMainCharacter::StartSprint()
 {
-	if (Stamina > 0)
+	if (Stamina > 0 && GetMovementComponent()->Velocity.Size() > 0)
 	{
 		bIsSprinting = true;
-		GetCharacterMovement()->MaxWalkSpeed = 1200;
-		Stamina -= 0.1f;
+		GetCharacterMovement()->MaxWalkSpeed = 2 * DefaultWalkSpeed;
+		Stamina -= StaminaDrainRate;
 
 		GetWorldTimerManager().SetTimer(TimerHandle_StaminaCheck, this, &AMainCharacter::StartSprint, 1, true);
 
 		if (Stamina <= 0.00f)
 		{
 			bIsSprinting = false;
-			GetCharacterMovement()->MaxWalkSpeed = 600;
+			GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
 		}
 	}
 }
@@ -130,17 +130,17 @@ void AMainCharacter::StartSprint()
 void AMainCharacter::EndSprint()
 {
 	bIsSprinting = false;
-	GetCharacterMovement()->MaxWalkSpeed = 600;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
 	GetWorldTimerManager().ClearTimer(TimerHandle_StaminaCheck);
 }
 
 void AMainCharacter::RegenerateStamina()
 {
-	if(Stamina < 1 && !bIsSprinting)
+	if (Stamina < 1 && !bIsSprinting)
 	{
-		Stamina += 0.05f;
+		Stamina += StaminaDrainRate / 2;
 
-		if(Stamina > MaxStamina)
+		if (Stamina > MaxStamina)
 		{
 			Stamina = MaxStamina;
 		}
